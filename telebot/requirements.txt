@@ -1,0 +1,7 @@
+sqlalchemy
+datetime
+numpy
+pandas
+gspread
+oauth2client
+df2gspread
