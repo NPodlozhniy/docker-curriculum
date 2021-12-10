@@ -14,6 +14,16 @@ password = os.environ.get("PASSWORD")
 
 engine = sqlalchemy.create_engine(f'mssql+pymssql://{username}:{password}@{hostname}')
 
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+from df2gspread import df2gspread as d2g
+
+scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+credentials = ServiceAccountCredentials.from_json_keyfile_name(
+    os.environ.get("KEYFILE"), scopes=scope)
+gc = gspread.authorize(credentials)
+spreadsheet_key = "19Lt8Bf0xglLDNcEjMBLV08r6UNmvAlRC3Z_tsOV1OUQ"
+
 selects = ["""
     select
         count(case
@@ -91,5 +101,12 @@ selects = ["""
     ;"""]
 
 for idx, wks_name in enumerate(["card", "activation", "topup", "purchase", "lifetime"]):
-    print(idx, wks_name)
-    print(pd.read_sql(selects[idx], engine))
+    # print(idx, wks_name)
+    # print(pd.read_sql(selects[idx], engine))
+    d2g.upload(pd.read_sql(selects[idx], engine),
+               spreadsheet_key,
+               wks_name=wks_name,
+               col_names=False,
+               row_names=False,
+               credentials=credentials,
+               df_size=True)
